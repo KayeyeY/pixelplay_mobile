@@ -546,6 +546,10 @@ Pengguna memasukkan data akun berupa username dan password di halaman LoginPage.
 Kembali ke Flutter, jika request.loggedIn, pengguna diarahkan ke halaman MyHomePage, dan tampilan selamat datang muncul menggunakan SnackBar.
 
 **Sebutkan seluruh widget yang kamu pakai pada tugas ini dan jelaskan fungsinya masing-masing.**
+* TextField = memungkinkan pengguna memasukan teks, pada tugas ini digunakan untuk user memasukan nama dan sandi.
+* Column = menyusun teks secara vertikal, pada tugas ini digunakan untuk menyusun informasi barang secara vertikal.
+* FutureBuilder = membangun widget secara asinkron, pada tugas ini digunakan untuk mengelola status loading error dan data yang tersedia.
+* ListView.builder = membuat daftar yang dapat di scroll pada tugas ini digunakan untuk menampilkan barang yang ada.
 
 **Jelaskan bagaimana cara kamu mengimplementasikan checklist di atas secara step-by-step! (bukan hanya sekadar mengikuti tutorial).**
 
