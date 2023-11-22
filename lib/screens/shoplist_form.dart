@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:pixelplay_mobile/screens/menu.dart';
 import 'package:pixelplay_mobile/widgets/left_drawer.dart';
-// TODO: Impor drawer yang sudah dibuat sebelumnya
+import 'package:provider/provider.dart';
+
 
 class ShopFormPage extends StatefulWidget {
     const ShopFormPage({super.key});
@@ -22,10 +26,12 @@ class _ShopFormPageState extends State<ShopFormPage> {
     final _formKey = GlobalKey<FormState>();
     String _name = "";
     int _amount = 0;
+    int _price = 0;
     String _description = "";
 
     @override
     Widget build(BuildContext context) {
+      final request = context.watch<CookieRequest>();
         return Scaffold(
           appBar: AppBar(
             title: const Center(
@@ -111,6 +117,32 @@ class _ShopFormPageState extends State<ShopFormPage> {
                     padding: const EdgeInsets.all(8.0),
                     child: TextFormField(
                       decoration: InputDecoration(
+                        hintText: "Price",
+                        labelText: "Price",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(5.0),
+                        ),
+                      ),
+                      onChanged: (String? value) {
+                        setState(() {
+                          _price = int.parse(value!);
+                        });
+                      },
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return "Harga tidak boleh kosong!";
+                        }
+                        if (int.tryParse(value) == null) {
+                          return "Harga harus berupa angka!";
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextFormField(
+                      decoration: InputDecoration(
                         hintText: "Deskripsi",
                         labelText: "Deskripsi",
                         border: OutlineInputBorder(
@@ -146,38 +178,33 @@ class _ShopFormPageState extends State<ShopFormPage> {
                           backgroundColor:
                               MaterialStateProperty.all(Colors.indigo),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: const Text('Produk berhasil tersimpan'),
-                                  content: SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Memunculkan value-value lainnya
-                                        Text('Nama: $_name'),
-                                        Text('Harga: $_amount'),
-                                        Text('Deskripsi: $_description')
-                                      ],
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      child: const Text('OK'),
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                        Item.itemList.add(Item(_name, _amount, _description));
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          _formKey.currentState!.reset();
+                              final response = await request.postJson(
+                              "http://127.0.0.1:8000/create-flutter/",
+                              jsonEncode(<String, String>{
+                                  'name': _name,
+                                  'price': _price.toString(),
+                                  'amount': _amount.toString(),
+                                  'description': _description,
+                                  // TODO: Sesuaikan field data sesuai dengan aplikasimu
+                              }));
+                              if (response['status'] == 'success') {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(const SnackBar(
+                                  content: Text("Produk baru berhasil disimpan!"),
+                                  ));
+                                  Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => MyHomePage()),
+                                  );
+                              } else {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(const SnackBar(
+                                      content:
+                                          Text("Terdapat kesalahan, silakan coba lagi."),
+                                  ));
+                              }
                           }
                         },
                         child: const Text(

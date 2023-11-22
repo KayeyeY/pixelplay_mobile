@@ -515,3 +515,161 @@ class ShopCard extends StatelessWidget {
 }
 ```
 6. Buat direktori `screens` dan pindahkan `menu.dart` dan `shoplist_form.dart` ke direktori `screens`
+
+
+### Readme tugas 9
+**Apakah bisa kita melakukan pengambilan data JSON tanpa membuat model terlebih dahulu? Jika iya, apakah hal tersebut lebih baik daripada membuat model sebelum melakukan pengambilan data JSON?**
+  - Apakah bisa kita melakukan pengambilan data JSON tanpa membuat model terlebih dahulu? Ya bisa, kita dapat mengakalinya dengan menggunakan sebuah variabel yang menyimpan sebuah dictionary berisi data.
+
+  - Apakah hal tersebut lebih baik daripada membuat model sebelum melakukan pengambilan data JSON? Tidak, justru model mempermudah kita dalam melakukan pengambilan data karena dengan model kita dapat memastikan suatu objek memiliki semua nilai atribut pada kelas dibanding dengan dictionary yang bisa saja kita melewatkan suatu atribut.
+
+**Jelaskan fungsi dari CookieRequest dan jelaskan mengapa instance CookieRequest perlu untuk dibagikan ke semua komponen di aplikasi Flutter.**
+CookieRequest adalah salah satu class pada package pbp_django_auth.dart.  
+  
+Fungsi dari class CookieRequest:
+  * Menyediakan fungsi untuk inisialisasi sesi, login, dan logout yang memungkinkan aplikasi untuk melacak status login dan sesi pengguna.
+  * Cookies berupa informasi sesi tersebut disimpan secara lokal.
+  * Melakukan permintaan HTTP dengan metode GET dan POST.  
+    
+CookieRequest harus diperluas atau dibagikan ke seluruh komponen dalam aplikasi Flutter untuk memastikan konsistensi status login atau sesi (cookies). Dengan demikian, jika ada perubahan dalam status login atau sesi di suatu komponen atau aplikasi, perubahan tersebut juga akan tercermin di komponen atau aplikasi lainnya.
+
+**Jelaskan mekanisme pengambilan data dari JSON hingga dapat ditampilkan pada Flutter.**
+
+Buatlah model kustom menggunakan layanan Quicktype yang memproses data JSON yang diperoleh dari endpoint /json pada proyek Django. Tambahkan dependensi HTTP ke proyek Flutter, sertakan dependensi http, dan masukkan kode `<uses-permission android:name="android.permission.INTERNET" />` pada file AndroidManifest.xml yang terletak di android/app/src/main/ untuk mengizinkan akses internet.
+
+Di salah satu file di direktori lib/screens yang akan melakukan pengambilan data, implementasikan fungsi asinkron dan kirimkan permintaan HTTP untuk mendapatkan 
+
+**Jelaskan mekanisme autentikasi dari input data akun pada Flutter ke Django hingga selesainya proses autentikasi oleh Django dan tampilnya menu pada Flutter.**
+
+Pengguna memasukkan data akun berupa username dan password di halaman LoginPage. Saat tombol login ditekan, fungsi login pada CookieRequest dipanggil, yang mengirimkan permintaan HTTP ke endpoint URL proyek Django. Pada sisi Django, autentikasi dilakukan melalui langkah-langkah seperti user = authenticate(username=username, password=password) dalam views.py yang berkaitan dengan otentikasi. Setelah itu, dilakukan pengecekan apakah user is not None dan user.is_active.
+
+Kembali ke Flutter, jika request.loggedIn, pengguna diarahkan ke halaman MyHomePage, dan tampilan selamat datang muncul menggunakan SnackBar.
+
+**Sebutkan seluruh widget yang kamu pakai pada tugas ini dan jelaskan fungsinya masing-masing.**
+
+**Jelaskan bagaimana cara kamu mengimplementasikan checklist di atas secara step-by-step! (bukan hanya sekadar mengikuti tutorial).**
+
+1. Membuat app authentication dan menginstall corsheaders
+2. lalu buat metode view pada authentication untuk login dan logout
+3. Membuat model dengan endpoint JSON pada web django sebelumnya.
+4. Masukan data ke quicktype untuk membuat model.
+5. `android/app/src/main/AndroidManifest.xml`, tambahkan kode berikut untuk memperbolehkan akses Internet pada aplikasi Flutter yang sedang dibuat.
+6. Buat file list_product.dart dan isi dengan kode dibawah.
+```
+import 'package:<APP_NAME>/widgets/left_drawer.dart';
+
+class ProductPage extends StatefulWidget {
+    const ProductPage({Key? key}) : super(key: key);
+
+    @override
+    _ProductPageState createState() => _ProductPageState();
+}
+
+class _ProductPageState extends State<ProductPage> {
+Future<List<Product>> fetchProduct() async {
+    // TODO: Ganti URL dan jangan lupa tambahkan trailing slash (/) di akhir URL!
+    var url = Uri.parse(
+        'http://<URL_APP_KAMU>/json/');
+    var response = await http.get(
+        url,
+        headers: {"Content-Type": "application/json"},
+    );
+
+    // melakukan decode response menjadi bentuk json
+    var data = jsonDecode(utf8.decode(response.bodyBytes));
+
+    // melakukan konversi data json menjadi object Product
+    List<Product> list_product = [];
+    for (var d in data) {
+        if (d != null) {
+            list_product.add(Product.fromJson(d));
+        }
+    }
+    return list_product;
+}
+
+@override
+Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+        title: const Text('Product'),
+        ),
+        drawer: const LeftDrawer(),
+        body: FutureBuilder(
+            future: fetchProduct(),
+            builder: (context, AsyncSnapshot snapshot) {
+                if (snapshot.data == null) {
+                    return const Center(child: CircularProgressIndicator());
+                } else {
+                    if (!snapshot.hasData) {
+                    return const Column(
+                        children: [
+                        Text(
+                            "Tidak ada data produk.",
+                            style:
+                                TextStyle(color: Color(0xff59A5D8), fontSize: 20),
+                        ),
+                        SizedBox(height: 8),
+                        ],
+                    );
+                } else {
+                    return ListView.builder(
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (_, index) => Container(
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                                padding: const EdgeInsets.all(20.0),
+                                child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                    Text(
+                                    "${snapshot.data![index].fields.name}",
+                                    style: const TextStyle(
+                                        fontSize: 18.0,
+                                        fontWeight: FontWeight.bold,
+                                    ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text("${snapshot.data![index].fields.price}"),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                        "${snapshot.data![index].fields.description}")
+                                ],
+                                ),
+                            ));
+                    }
+                }
+            }));
+    }
+}
+```
+7. Buat fungsi view baru pada main
+```
+@csrf_exempt
+def create_product_flutter(request):
+    if request.method == 'POST':
+        
+        data = json.loads(request.body)
+
+        new_product = Product.objects.create(
+            user = request.user,
+            name = data["name"],
+            price = int(data["price"]),
+            description = data["description"]
+        )
+
+        new_product.save()
+
+        return JsonResponse({"status": "success"}, status=200)
+    else:
+        return JsonResponse({"status": "error"}, status=401)
+```
+8. Hubungkan shoplist_form.dart dengan cookierequest:
+```
+@override
+Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+
+    return Scaffold(
+```
